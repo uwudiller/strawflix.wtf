@@ -1,6 +1,6 @@
 # Strawflix
 
-A monochrome "liquid glass" streaming web app (Apple-style glassmorphism, no color except the gold `.uwu` in the wordmark) that turns Real-Debrid + Torrentio into a browser experience. Connect your Real-Debrid API token, browse/search movies and series, and stream instantly.
+![Strawflix.uwu](screenshot.png)
 
 > ⚠️ Only stream content you are legally entitled to watch. Your Real-Debrid token is stored only in your browser's `localStorage` and is sent to this app's own server routes to fetch stream metadata — it is never logged or exposed publicly.
 
