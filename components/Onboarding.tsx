@@ -82,7 +82,7 @@ export default function Onboarding() {
               />
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
               <a
                 href="https://real-debrid.com/apitoken"
                 target="_blank"

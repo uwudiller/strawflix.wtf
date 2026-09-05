@@ -207,7 +207,7 @@ export default function Browse() {
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ position: "relative", width: "clamp(220px, 26vw, 420px)" }}>
+        <div className="nav-search">
           <input
             className="input"
             style={{ padding: "9px 18px", borderRadius: "var(--radius-pill)", fontSize: 14.5 }}
@@ -230,7 +230,7 @@ export default function Browse() {
         >
           {sub != null && (
             <span
-              className="chip"
+              className="chip hide-mobile"
               title={
                 sub.date
                   ? `Premium expires ${sub.date.toLocaleDateString(undefined, {
@@ -247,7 +247,7 @@ export default function Browse() {
           )}
           {user && (
             <span
-              className="chip"
+              className="chip hide-mobile"
               style={{ maxWidth: 160 }}
               title="Real-Debrid account"
             >
