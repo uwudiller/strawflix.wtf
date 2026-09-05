@@ -44,7 +44,7 @@ export default function TitlePage({
   const [hosting, setHosting] = useState<HostingState | null>(null);
   const [hostingFor, setHostingFor] = useState<ResolvedStream | null>(null);
 
-  const progress = useWatchProgress();
+  const progress = useWatchProgress(token);
 
   // Key for the currently-watched media (used to save + resume progress).
   const currentKey = mediaProgressKey(
@@ -429,7 +429,16 @@ export default function TitlePage({
           onClose={() => setActiveStream(null)}
           resumeSeconds={resumeSeconds}
           onProgress={(seconds, duration) =>
-            progress.note(currentKey, { title: playerTitle }, seconds, duration)
+            progress.note(
+              currentKey,
+              {
+                title: playerTitle,
+                poster: meta?.poster,
+                background: meta?.background,
+              },
+              seconds,
+              duration
+            )
           }
         />
       ) : null}

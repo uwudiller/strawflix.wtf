@@ -16,7 +16,7 @@ import {
 type Tab = "movie" | "series";
 
 export default function Browse() {
-  const { user, clear } = useAuth();
+  const { token, user, clear } = useAuth();
   const router = useRouter();
 
   const [tab, setTab] = useState<Tab>("movie");
@@ -27,7 +27,7 @@ export default function Browse() {
   const [showSettings, setShowSettings] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { list, remove } = useWatchProgress();
+  const { list, remove, version } = useWatchProgress(token);
   usePruneProgress();
   const [continuing, setContinuing] = useState<WatchProgress[]>([]);
 
@@ -38,7 +38,7 @@ export default function Browse() {
 
   useEffect(() => {
     refreshContinue();
-  }, [refreshContinue]);
+  }, [refreshContinue, version]);
 
   const sub = user ? premiumDaysLeft(user) : null;
 
@@ -255,74 +255,84 @@ export default function Browse() {
 
         {continuing.length > 0 && (
           <section style={{ marginTop: 28 }}>
-            <p className="eyebrow" style={{ marginBottom: 14 }}>Continue watching</p>
-            <div
-              style={{
-                display: "grid",
-                gap: 12,
-                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-              }}
-            >
-              {continuing.map((c) => (
-                <div
-                  key={c.key}
-                  className="glass animate-in"
-                  style={{
-                    padding: 14,
-                    cursor: "pointer",
-                    display: "flex",
-                    gap: 12,
-                    alignItems: "center",
-                    position: "relative",
-                  }}
-                  onClick={() => openContinue(c)}
-                >
-                  <button
-                    className="btn btn-ghost"
-                    aria-label="Remove from continue watching"
-                    title="Remove from continue watching"
-                    style={{
-                      position: "absolute",
-                      top: 6,
-                      right: 6,
-                      padding: "4px 8px",
-                      fontSize: 13,
-                      borderRadius: 999,
-                      lineHeight: 1,
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFromContinue(c.key);
-                    }}
-                  >
-                    ✕
-                  </button>
+            <p className="eyebrow" style={{ marginBottom: 14 }}>
+              Continue watching · {continuing.length}
+            </p>
+            <ContinueBanner
+              entry={continuing[0]}
+              items={continuing.length}
+              onResume={() => openContinue(continuing[0])}
+              onDismiss={() => removeFromContinue(continuing[0].key)}
+            />
+            {continuing.length > 1 && (
+              <div
+                style={{
+                  display: "grid",
+                  gap: 12,
+                  gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                  marginTop: 12,
+                }}
+              >
+                {continuing.slice(1).map((c) => (
                   <div
+                    key={c.key}
+                    className="glass animate-in"
                     style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 11,
-                      display: "grid",
-                      placeItems: "center",
-                      fontWeight: 800,
-                      background: "rgba(255,255,255,0.12)",
-                      flexShrink: 0,
+                      padding: 14,
+                      cursor: "pointer",
+                      display: "flex",
+                      gap: 12,
+                      alignItems: "center",
+                      position: "relative",
                     }}
+                    onClick={() => openContinue(c)}
                   >
-                    ▶
-                  </div>
-                  <div style={{ minWidth: 0, paddingRight: 22 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {c.title}
+                    <button
+                      className="btn btn-ghost"
+                      aria-label="Remove from continue watching"
+                      title="Remove from continue watching"
+                      style={{
+                        position: "absolute",
+                        top: 6,
+                        right: 6,
+                        padding: "4px 8px",
+                        fontSize: 13,
+                        borderRadius: 999,
+                        lineHeight: 1,
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFromContinue(c.key);
+                      }}
+                    >
+                      ✕
+                    </button>
+                    <div
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 11,
+                        display: "grid",
+                        placeItems: "center",
+                        fontWeight: 800,
+                        background: "rgba(255,255,255,0.12)",
+                        flexShrink: 0,
+                      }}
+                    >
+                      ▶
                     </div>
-                    <div className="muted" style={{ fontSize: 12, marginTop: 3 }}>
-                      {timeOf(c)}
-                      {c.duration ? ` of ${prettyDuration(c.duration)}` : ""}
+                    <div style={{ minWidth: 0, paddingRight: 22 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {c.title}
+                      </div>
+                      <div className="muted" style={{ fontSize: 12, marginTop: 3 }}>
+                        {c.duration ? `${timeOf(c)} of ${prettyDuration(c.duration)}` : timeOf(c)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -394,4 +404,95 @@ function premiumDaysLeft(user: RDUserInfo): { days: number; date?: Date } | null
     days: Math.max(0, Math.ceil((ms - Date.now()) / 86400000)),
     date: new Date(ms),
   };
+}
+
+function seriesLabel(key: string): string | null {
+  const parts = key.split(":");
+  if (parts[0] === "series" && parts.length === 4) {
+    return `S${String(parts[2]).padStart(2, "0")}E${String(parts[3]).padStart(2, "0")}`;
+  }
+  return null;
+}
+
+function ContinueBanner({
+  entry,
+  items,
+  onResume,
+  onDismiss,
+}: {
+  entry: WatchProgress;
+  items: number;
+  onResume: () => void;
+  onDismiss: () => void;
+}) {
+  const backdrop = entry.background || entry.poster;
+  const remaining = Math.max(0, entry.duration - entry.seconds);
+  const ep = seriesLabel(entry.key);
+
+  return (
+    <div
+      className="glass animate-in"
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: "var(--radius-xl)",
+        minHeight: 230,
+        display: "flex",
+        alignItems: "flex-end",
+      }}
+    >
+      {backdrop ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={backdrop}
+          alt=""
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            zIndex: 0,
+          }}
+        />
+      ) : null}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 1,
+          background:
+            "linear-gradient(90deg, rgba(10,10,12,0.9) 0%, rgba(10,10,12,0.72) 45%, rgba(10,10,12,0.25) 100%)",
+        }}
+      />
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          padding: "clamp(24px, 5vw, 48px)",
+          maxWidth: 700,
+          width: "100%",
+        }}
+      >
+        <p className="eyebrow" style={{ marginBottom: 10, color: "var(--text-dim)" }}>
+          {ep ? `Episode ${ep}` : "Movie"} · {items} {items === 1 ? "title" : "titles"} in your list
+        </p>
+        <h2 style={{ fontSize: "clamp(24px, 4vw, 38px)", lineHeight: 1.08 }}>{entry.title}</h2>
+        <p className="muted" style={{ marginTop: 10, fontSize: 13.5, lineHeight: 1.5 }}>
+          {timeOf(entry)} {entry.duration ? ` of ${prettyDuration(entry.duration)}` : ""}
+          {remaining > 0 && entry.duration
+            ? ` · ${prettyDuration(remaining)} left`
+            : ""}
+        </p>
+        <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
+          <button className="btn btn-primary" style={{ padding: "12px 24px", fontSize: 14 }} onClick={onResume}>
+            ▶ Resume
+          </button>
+          <button className="btn btn-ghost" style={{ padding: "12px 18px", fontSize: 14 }} onClick={onDismiss}>
+            ✕ Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

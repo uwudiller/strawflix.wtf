@@ -8,7 +8,6 @@ export const metadata: Metadata = {
   icons: {
     icon: "/icon.svg",
   },
-  themeColor: "#0a0a0c",
 };
 
 export const viewport: Viewport = {

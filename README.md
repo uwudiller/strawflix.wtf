@@ -40,6 +40,10 @@ Connect your account, accept the defaults (Vercel auto-detects Next.js), and you
 | Variable | Purpose |
 | --- | --- |
 | `TORRENTIO_BASE` | Override the Torrentio instance (e.g. a self-hosted one). Defaults to `https://torrentio.strem.fun`. |
+| `KV_REST_API_URL` | Enables **cross-device watch progress**. Set both this and the token below to sync Continue Watching across devices via Vercel KV. |
+| `KV_REST_API_TOKEN` | Vercel KV REST API token (paired with the URL above). |
+
+Without `KV_REST_API_URL`/`KV_REST_API_TOKEN`, watch progress is kept in the browser's `localStorage` only. To add sync: in Vercel, create a **KV store** (Storage → KV → Create Database), then paste its `.env.local` values (`KV_REST_API_URL` and `KV_REST_API_TOKEN`) into your project's Environment Variables and redeploy. Progress is keyed by a hash of your Real-Debrid token, so the same account resumes mid-scene on any device.
 
 ## FAQ
 
