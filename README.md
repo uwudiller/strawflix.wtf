@@ -9,13 +9,17 @@
 1. **Browse & search** — metadata comes from Cinemeta (Stremio's official metadata add-on); no API key needed. Catalogs and search are proxied through this app's server routes.
 2. **Find a stream** — when you open a title, the app asks Torrentio (`torrentio.strem.fun`) with your Real-Debrid token configured as `realdebrid=<token>`, which returns cached, playable streams.
 3. **Play** — streams go through `/api/proxy` **by default**, which pipes the video with Range/206 support, inline (non-download) headers, and CORS — so the browser plays instead of downloading. The player can switch to the **Direct link** (Torrentio → Real-Debrid redirect) if needed. Uncached (magnet) streams can be "Hosted to Debrid" with progress tracking.
-4. **Resume watching** — watch position is saved to `localStorage` every few seconds. Come back to a movie or episode and the player resumes where you left off; the home screen shows a "Continue watching" section.
+4. **Resume watching** — watch position is saved to `localStorage` every few seconds (optionally synced to Vercel KV for cross-device resume). Come back to a movie or episode and the player resumes where you left off; the home screen shows a "Continue watching" section.
+5. **My List** — star any movie/show (on cards or the title page) to build a watchlist that syncs across devices alongside your progress.
+6. **Player toolkit** — next/previous episode (auto-plays via Torrentio binge support), ⏪/⏩ 10-second arrow-key seeks, `Space` pause, speed control (0.5–2×), fullscreen, Cast (Remote Playback API when your browser supports it), and subtitles from OpenSubtitles.com when `OS_API_KEY` is configured.
+7. **More like this** — titles similar to what you're watching, from Cinemeta's recommendations endpoint.
+8. **PWA** — installable, offline-ready app shell (manifest + service worker).
 
 ## Tech
 
 - **Next.js 15** (App Router, Route Handlers for the server-side API work) — deploy-ready for Vercel.
 - TypeScript, no external UI libraries. Pure CSS design system in `app/globals.css`.
-- Server routes: `/api/catalog`, `/api/meta`, `/api/streams`, `/api/token`, `/api/magnet`, `/api/magnet/status`, `/api/proxy`.
+- Server routes: `/api/catalog`, `/api/meta`, `/api/streams`, `/api/token`, `/api/magnet`, `/api/magnet/status`, `/api/proxy`, `/api/progress`, `/api/watchlist`, `/api/similar`, `/api/subtitles`, `/api/subtitle`.
 
 ## Run locally
 
@@ -40,10 +44,15 @@ Connect your account, accept the defaults (Vercel auto-detects Next.js), and you
 | Variable | Purpose |
 | --- | --- |
 | `TORRENTIO_BASE` | Override the Torrentio instance (e.g. a self-hosted one). Defaults to `https://torrentio.strem.fun`. |
-| `KV_REST_API_URL` | Enables **cross-device watch progress**. Set both this and the token below to sync Continue Watching across devices via Vercel KV. |
+| `KV_REST_API_URL` | Enables **cross-device watch progress + My List**. Set both this and the token below to sync across devices via Vercel KV. |
 | `KV_REST_API_TOKEN` | Vercel KV REST API token (paired with the URL above). |
+| `OS_API_KEY` | Enables **subtitles** via OpenSubtitles.com. Pair with `OS_USERNAME`/`OS_PASSWORD` (a free account). |
+| `OS_USERNAME` | OpenSubtitles.com username. |
+| `OS_PASSWORD` | OpenSubtitles.com password. |
+| `OS_LANGUAGES` | Subtitle languages to fetch (default `en`). Comma-separated, e.g. `en,es`. |
+| `EXTRA_ADDONS` | Extra stream source add-ons (Stremio protocol). JSON array: `[{"base":"https://addon.example","config":"realdebrid={token}","label":"MyAddon"}]`. `{token}` is replaced with the user's token per request. |
 
-Without `KV_REST_API_URL`/`KV_REST_API_TOKEN`, watch progress is kept in the browser's `localStorage` only. To add sync: in Vercel, create a **KV store** (Storage → KV → Create Database), then paste its `.env.local` values (`KV_REST_API_URL` and `KV_REST_API_TOKEN`) into your project's Environment Variables and redeploy. Progress is keyed by a hash of your Real-Debrid token, so the same account resumes mid-scene on any device.
+Without `KV_REST_API_URL`/`KV_REST_API_TOKEN`, progress and My List are kept in the browser's `localStorage` only. To add sync: in Vercel, create a **KV store** (Storage → KV → Create Database), then paste its `.env.local` values (`KV_REST_API_URL` and `KV_REST_API_TOKEN`) into your project's Environment Variables and redeploy. Progress is keyed by a hash of your Real-Debrid token, so the same account resumes mid-scene on any device.
 
 ## FAQ
 

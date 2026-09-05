@@ -4,6 +4,66 @@ import {
   fetchTorrentioStreams,
   parseStream,
 } from "@/lib/torrentio";
+import type { TorrentioStream, ResolvedStream } from "@/lib/types";
+
+interface ExtraAddon {
+  base: string;
+  config?: string;
+  label?: string;
+}
+
+function extraAddons(): ExtraAddon[] {
+  const raw = process.env.EXTRA_ADDONS;
+  if (!raw?.trim()) return [];
+  try {
+    const arr = JSON.parse(raw) as ExtraAddon[];
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+async function fetchExtraStreams(
+  token: string,
+  type: string,
+  id: string,
+  season?: number,
+  episode?: number
+): Promise<ResolvedStream[]> {
+  const addons = extraAddons();
+  if (!addons.length) return [];
+  const base = type === "series" ? "series" : "movie";
+  const resourceId =
+    type === "series"
+      ? `${id}:${season ?? 1}:${episode ?? 1}`
+      : id;
+
+  const results = await Promise.all(
+    addons.map(async (a): Promise<ResolvedStream[]> => {
+      try {
+        const config = a.config ?? "realdebrid={token}";
+        const configStr = config.replace("{token}", token);
+        const url = `${a.base.replace(/\/+$/, "")}/${configStr}/stream/${base}/${resourceId}.json`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) return [];
+        const data = (await res.json()) as { streams?: TorrentioStream[] };
+        const label = a.label ?? "Extra";
+        return (data.streams ?? [])
+          .filter((s) => s)
+          .map((s) => ({
+            ...s,
+            ...parseStream(s),
+            source: label,
+            displayName: `${s.name ?? label} ${s.title ?? ""}`.trim(),
+          }));
+      } catch {
+        return [];
+      }
+    })
+  );
+
+  return results.flat();
+}
 
 export async function POST(req: Request) {
   let body: {
@@ -27,15 +87,19 @@ export async function POST(req: Request) {
   }
 
   try {
-    const streams = await fetchTorrentioStreams(token, {
-      type,
-      id,
-      season,
-      episode,
-      title: id,
-    });
+    const [torrentio, extra] = await Promise.all([
+      fetchTorrentioStreams(token, {
+        type,
+        id,
+        season,
+        episode,
+        title: id,
+      }),
+      fetchExtraStreams(token, rawType ?? "movie", id, season, episode),
+    ]);
 
-    const scored = streams
+    const scored = [...torrentio, ...extra]
+      .filter((s) => s && s.url)
       .map((s) => ({ ...s, ...parseStream(s) }))
       .sort((a, b) => {
         if (a.cached !== b.cached) return a.cached ? -1 : 1;

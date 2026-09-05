@@ -4,6 +4,7 @@ import Background from "@/components/Background";
 import Onboarding from "@/components/Onboarding";
 import Browse from "@/components/Browse";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { WatchlistProvider } from "@/lib/watchlist";
 
 function Shell() {
   const { token } = useAuth();
@@ -18,7 +19,9 @@ function Shell() {
 export default function HomePage() {
   return (
     <AuthProvider>
-      <Shell />
+      <WatchlistProvider>
+        <Shell />
+      </WatchlistProvider>
     </AuthProvider>
   );
 }

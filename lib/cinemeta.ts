@@ -38,3 +38,13 @@ export async function getMeta(
   const data = await cinemetaFetch<{ meta: CinemetaMeta }>(`/meta/${type}/${id}.json`);
   return data.meta ?? null;
 }
+
+export async function getSimilar(
+  type: "movie" | "series",
+  id: string
+): Promise<CinemetaMeta[]> {
+  const data = await cinemetaFetch<{ metas: CinemetaMeta[] }>(
+    `/catalog/${type}/recommend/${id}.json`
+  );
+  return data.metas ?? [];
+}

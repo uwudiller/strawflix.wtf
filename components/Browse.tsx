@@ -6,6 +6,7 @@ import type { CinemetaMeta } from "@/lib/types";
 import CatalogCard from "@/components/CatalogCard";
 import { Wordmark } from "@/components/Wordmark";
 import { useRouter } from "next/navigation";
+import { useWatchlist, type WatchlistItem } from "@/lib/watchlist";
 import {
   useWatchProgress,
   usePruneProgress,
@@ -29,7 +30,14 @@ export default function Browse() {
 
   const { list, remove, version } = useWatchProgress(token);
   usePruneProgress();
+  const { list: listWatchlist, version: watchlistVersion } = useWatchlist();
+  const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
   const [continuing, setContinuing] = useState<WatchProgress[]>([]);
+
+  useEffect(() => {
+    setWatchlistItems(listWatchlist());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchlistVersion]);
 
   const refreshContinue = useCallback(() => {
     setContinuing(list().slice(0, 10));
@@ -333,6 +341,30 @@ export default function Browse() {
                 ))}
               </div>
             )}
+          </section>
+        )}
+
+        {watchlistItems.length > 0 && (
+          <section style={{ marginTop: 34 }}>
+            <p className="eyebrow" style={{ marginBottom: 14 }}>
+              My List · {watchlistItems.length}
+            </p>
+            <div className="grid">
+              {watchlistItems.map((item, i) => (
+                <CatalogCard
+                  key={item.id}
+                  meta={{
+                    id: item.id,
+                    name: item.name,
+                    type: item.type,
+                    poster: item.poster,
+                    background: item.background,
+                  }}
+                  index={i}
+                  fallbackType={item.type}
+                />
+              ))}
+            </div>
           </section>
         )}
 

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Background from "@/components/Background";
 import TitlePage from "@/components/TitlePage";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { WatchlistProvider } from "@/lib/watchlist";
 import Onboarding from "@/components/Onboarding";
 
 function Shell({
@@ -52,9 +53,11 @@ export default function TitleRoute({
 
   return (
     <AuthProvider>
-      <Suspense fallback={<Background />}>
-        <Shell type={type} id={id} />
-      </Suspense>
+      <WatchlistProvider>
+        <Suspense fallback={<Background />}>
+          <Shell type={type} id={id} />
+        </Suspense>
+      </WatchlistProvider>
     </AuthProvider>
   );
 }

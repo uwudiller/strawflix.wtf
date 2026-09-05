@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import type { CinemetaMeta, ResolvedStream, Episode } from "@/lib/types";
 import Player from "@/components/Player";
+import CatalogCard from "@/components/CatalogCard";
 import { mediaProgressKey, useWatchProgress } from "@/lib/progress";
+import { useWatchlist } from "@/lib/watchlist";
 
 interface HostingState {
   id: string;
@@ -45,6 +47,10 @@ export default function TitlePage({
   const [hostingFor, setHostingFor] = useState<ResolvedStream | null>(null);
 
   const progress = useWatchProgress(token);
+  const { has: inList, toggle: toggleList } = useWatchlist();
+
+  const [similar, setSimilar] = useState<CinemetaMeta[]>([]);
+  const [autoPlayKey, setAutoPlayKey] = useState<string | null>(null);
 
   // Key for the currently-watched media (used to save + resume progress).
   const currentKey = mediaProgressKey(
@@ -71,6 +77,17 @@ export default function TitlePage({
       .catch(() => setMetaError(true));
   }, [type, imdbId]);
 
+  // Load "More like this"
+  useEffect(() => {
+    setSimilar([]);
+    fetch(`/api/similar?type=${type}&id=${imdbId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.metas) setSimilar((d.metas as CinemetaMeta[]).slice(0, 20));
+      })
+      .catch(() => {});
+  }, [type, imdbId]);
+
   const seasons = useMemo(() => {
     if (!meta?.videos?.length) return [];
     const set = new Set<number>();
@@ -93,6 +110,32 @@ export default function TitlePage({
         released: v.released,
       }));
   }, [meta, season]);
+
+  // Flat ordering of every episode across seasons (for next/prev navigation).
+  const allEpisodes = useMemo(() => {
+    if (!meta?.videos?.length) return [];
+    return meta.videos
+      .filter((v) => v.season != null && v.episode != null)
+      .sort(
+        (a, b) =>
+          (a.season ?? 0) - (b.season ?? 0) ||
+          (a.episode ?? 0) - (b.episode ?? 0)
+      )
+      .map((v) => ({
+        id: v.id,
+        season: v.season ?? 0,
+        episode: v.episode ?? 0,
+        name: v.name ?? v.title ?? "",
+        released: v.released,
+      }));
+  }, [meta]);
+
+  const episodeIndex = useMemo(
+    () => allEpisodes.findIndex((e) => e.id === episode?.id),
+    [allEpisodes, episode]
+  );
+  const nextEpisode = episodeIndex >= 0 ? allEpisodes[episodeIndex + 1] : undefined;
+  const prevEpisode = episodeIndex > 0 ? allEpisodes[episodeIndex - 1] : undefined;
 
   useEffect(() => {
     if (!episodes.length) return;
@@ -156,6 +199,35 @@ export default function TitlePage({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, type, imdbId, episode, episode?.id]);
+
+  // Advance to another episode (changing season if needed).
+  function advanceTo(ep: { id: string; season: number; episode: number } | undefined) {
+    if (!ep) return;
+    setEpisode(ep);
+    if (ep.season !== season) setSeason(ep.season);
+    setActiveStream(null);
+    setAutoPlayKey(ep.id);
+  }
+
+  // When streams for the target episode arrive, auto-open the best one.
+  useEffect(() => {
+    if (!autoPlayKey || !episode || autoPlayKey !== episode.id) return;
+    const choice =
+      streams.find((s) => s.cached && s.url) ?? streams.find((s) => s.url);
+    if (!choice) {
+      setAutoPlayKey(null);
+      return;
+    }
+    setActiveStream(null);
+    setAutoPlayKey(null);
+    setActiveStream(choice);
+    const label = meta?.name ?? imdbId;
+    setPlayerTitle(label);
+    setPlayerSubtitle(
+      `S${String(episode.season).padStart(2, "0")}E${String(episode.episode).padStart(2, "0")} · ${choice.displayName}`
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streams, autoPlayKey, episode]);
 
   function play(stream: ResolvedStream) {
     if (!stream.url) return;
@@ -302,6 +374,24 @@ export default function TitlePage({
                     <span key={g} className="chip">{g}</span>
                   ))}
                 </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 20, alignItems: "center" }}>
+                  <button
+                    className={inList(imdbId) ? "btn btn-primary" : "btn"}
+                    style={{ padding: "10px 18px", fontSize: 13.5, gap: 8 }}
+                    onClick={() =>
+                      toggleList({
+                        id: imdbId,
+                        type,
+                        name: meta.name ?? imdbId,
+                        poster: meta.poster,
+                        background: meta.background,
+                      })
+                    }
+                  >
+                    <span>{inList(imdbId) ? "★" : "☆"}</span>
+                    {inList(imdbId) ? "In My List" : "Add to My List"}
+                  </button>
+                </div>
                 {meta.description ? (
                   <p className="muted" style={{ marginTop: 16, lineHeight: 1.65, fontSize: 14.5, maxWidth: 640 }}>
                     {meta.description}
@@ -419,10 +509,25 @@ export default function TitlePage({
             </div>
           )}
         </div>
+
+        {/* More like this */}
+        {similar.length > 0 && (
+          <div style={{ marginTop: 42 }}>
+            <p className="eyebrow" style={{ marginBottom: 14 }}>
+              More like this
+            </p>
+            <div className="grid">
+              {similar.map((m, i) => (
+                <CatalogCard key={m.id} meta={m} index={i} fallbackType={type} />
+              ))}
+            </div>
+          </div>
+        )}
       </main>
 
       {activeStream && activeStream.url ? (
         <Player
+          key={activeStream.url}
           stream={activeStream}
           title={playerTitle}
           subtitle={playerSubtitle}
@@ -440,6 +545,19 @@ export default function TitlePage({
               duration
             )
           }
+          onEnded={
+            type === "series" && nextEpisode
+              ? () => advanceTo(nextEpisode)
+              : undefined
+          }
+          nextLabel={
+            nextEpisode
+              ? `S${String(nextEpisode.season).padStart(2, "0")}E${String(nextEpisode.episode).padStart(2, "0")} ${nextEpisode.name || ""}`.trim()
+              : undefined
+          }
+          onNext={nextEpisode ? () => advanceTo(nextEpisode) : undefined}
+          onPrev={prevEpisode ? () => advanceTo(prevEpisode) : undefined}
+          subtitleImdbId={imdbId}
         />
       ) : null}
     </div>

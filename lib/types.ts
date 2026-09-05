@@ -20,6 +20,7 @@ export interface ResolvedStream extends TorrentioStream {
   sizeLabel?: string;
   seeders?: number;
   container?: string;
+  source?: string;
 }
 
 export interface CinemetaMeta {
