@@ -1,5 +1,5 @@
-// The Strawflix wordmark: lowercase "strawflix" with a gold ".uwu" suffix.
-// Monochrome everywhere except the gold ".uwu".
+// The Strawflix wordmark: lowercase "strawflix" with a red "wtf" suffix.
+// Monochrome everywhere except the red "wtf".
 
 export function Wordmark({
   size = 19,
@@ -20,9 +20,9 @@ export function Wordmark({
     >
       strawflix
       {gold ? (
-        <span style={{ color: "var(--gold)" }}>.uwu</span>
+        <span style={{ color: "var(--accent)" }}>.wtf</span>
       ) : (
-        <span style={{ opacity: 0.55 }}>.uwu</span>
+        <span style={{ opacity: 0.55 }}>.wtf</span>
       )}
     </span>
   );

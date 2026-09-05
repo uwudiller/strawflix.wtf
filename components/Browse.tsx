@@ -6,6 +6,7 @@ import type { CinemetaMeta } from "@/lib/types";
 import CatalogCard from "@/components/CatalogCard";
 import { Wordmark } from "@/components/Wordmark";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useWatchlist, type WatchlistItem } from "@/lib/watchlist";
 import {
   useWatchProgress,
@@ -27,6 +28,31 @@ export default function Browse() {
   const [sectionLabel, setSectionLabel] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadSeq = useRef(0);
+  const navBarRef = useRef<HTMLDivElement | null>(null);
+  const movieTabRef = useRef<HTMLButtonElement | null>(null);
+  const seriesTabRef = useRef<HTMLButtonElement | null>(null);
+  const [navSlide, setNavSlide] = useState({ left: 0, width: 0 });
+
+  const measureSlide = useCallback(() => {
+    const active = tab === "movie" ? movieTabRef.current : seriesTabRef.current;
+    const bar = navBarRef.current;
+    if (!active || !bar) return;
+    const barRect = bar.getBoundingClientRect();
+    const activeRect = active.getBoundingClientRect();
+    const left = activeRect.left - barRect.left;
+    const width = activeRect.width;
+    setNavSlide((prev) =>
+      Math.abs(prev.left - left) < 0.5 && Math.abs(prev.width - width) < 0.5 ? prev : { left, width }
+    );
+  }, [tab]);
+
+  useEffect(() => {
+    measureSlide();
+    window.addEventListener("resize", measureSlide);
+    document.fonts?.ready?.then(measureSlide).catch(() => {});
+    return () => window.removeEventListener("resize", measureSlide);
+  }, [measureSlide]);
 
   const { list, remove, version } = useWatchProgress(token);
   usePruneProgress();
@@ -52,6 +78,7 @@ export default function Browse() {
 
   const load = useCallback(
     async (t: Tab, q?: string) => {
+      const seq = ++loadSeq.current;
       setLoading(true);
       try {
         const params = new URLSearchParams();
@@ -63,11 +90,13 @@ export default function Browse() {
         }
         params.set("type", t);
         const res = await fetch(`/api/catalog?${params.toString()}`);
+        if (seq !== loadSeq.current) return;
         if (!res.ok) return;
         const data = (await res.json()) as { metas: CinemetaMeta[] };
+        if (seq !== loadSeq.current) return;
         setMetas(data.metas ?? []);
       } finally {
-        setLoading(false);
+        if (seq === loadSeq.current) setLoading(false);
       }
     },
     []
@@ -126,22 +155,7 @@ export default function Browse() {
   return (
     <div style={{ paddingBottom: 80 }}>
       {/* Navbar */}
-      <header
-        className="glass"
-        style={{
-          position: "sticky",
-          top: 16,
-          zIndex: 20,
-          margin: "16px auto 0",
-          maxWidth: 1200,
-          width: "calc(100% - 48px)",
-          borderRadius: "var(--radius-lg)",
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          padding: "12px 18px",
-        }}
-      >
+      <header className="nav-scrim">
         <button
           onClick={() => {
             setQuery("");
@@ -157,20 +171,51 @@ export default function Browse() {
             padding: 0,
           }}
         >
-          <Wordmark />
+          <Wordmark size={22} />
         </button>
 
-        <div style={{ flex: 1, position: "relative", maxWidth: 420 }}>
+        <nav
+          ref={navBarRef}
+          className="nav-link-wrap"
+          style={{ display: "flex", gap: "clamp(14px, 2vw, 28px)", alignItems: "center", flexShrink: 0 }}
+        >
+          <button
+            ref={movieTabRef}
+            className={`nav-link ${tab === "movie" ? "active" : ""}`}
+            onClick={() => {
+              setQuery("");
+              setTab("movie");
+            }}
+          >
+            Movies
+          </button>
+          <button
+            ref={seriesTabRef}
+            className={`nav-link ${tab === "series" ? "active" : ""}`}
+            onClick={() => {
+              setQuery("");
+              setTab("series");
+            }}
+          >
+            Series
+          </button>
+          <span
+            className="nav-slider"
+            style={{ transform: `translateX(${navSlide.left}px)`, width: navSlide.width }}
+          />
+        </nav>
+
+        <div style={{ flex: 1 }} />
+
+        <div style={{ position: "relative", width: "clamp(220px, 26vw, 420px)" }}>
           <input
             className="input"
-            style={{ padding: "11px 16px", borderRadius: "var(--radius-pill)", fontSize: 14 }}
+            style={{ padding: "9px 18px", borderRadius: "var(--radius-pill)", fontSize: 14.5 }}
             placeholder="Search movies and series"
             value={query}
             onChange={(e) => onSearch(e.target.value)}
           />
         </div>
-
-        <div style={{ flex: 1 }} />
 
         <div
           data-account-menu
@@ -196,7 +241,7 @@ export default function Browse() {
                   : "Real-Debrid subscription"
               }
             >
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#4ade80" }} />
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)" }} />
               {sub.days} {sub.days === 1 ? "day" : "days"} left
             </span>
           )}
@@ -245,19 +290,11 @@ export default function Browse() {
       </header>
 
       {/* Body */}
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "36px 24px 0" }}>
+      <main style={{ padding: "32px clamp(20px, 4vw, 64px) 0" }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 8 }}>
           <div>
             <p className="eyebrow" style={{ marginBottom: 8 }}>Browse</p>
-            <h1>{sectionLabel || "Popular"}</h1>
-          </div>
-          <div className="tabs">
-            <button className={`tab ${tab === "movie" ? "active" : ""}`} onClick={() => setTab("movie")}>
-              Movies
-            </button>
-            <button className={`tab ${tab === "series" ? "active" : ""}`} onClick={() => setTab("series")}>
-              Series
-            </button>
+            <h1 style={{ fontSize: "clamp(30px, 4vw, 48px)" }}>{sectionLabel || "Popular"}</h1>
           </div>
         </div>
 
@@ -273,14 +310,7 @@ export default function Browse() {
               onDismiss={() => removeFromContinue(continuing[0].key)}
             />
             {continuing.length > 1 && (
-              <div
-                style={{
-                  display: "grid",
-                  gap: 12,
-                  gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-                  marginTop: 12,
-                }}
-              >
+              <div className="row-scroll" style={{ marginTop: 12 }}>
                 {continuing.slice(1).map((c) => (
                   <div
                     key={c.key}
@@ -292,6 +322,7 @@ export default function Browse() {
                       gap: 12,
                       alignItems: "center",
                       position: "relative",
+                      width: 300,
                     }}
                     onClick={() => openContinue(c)}
                   >
@@ -345,7 +376,7 @@ export default function Browse() {
         )}
 
         {watchlistItems.length > 0 && (
-          <section style={{ marginTop: 34 }}>
+          <section style={{ marginTop: 40 }}>
             <p className="eyebrow" style={{ marginBottom: 14 }}>
               My List · {watchlistItems.length}
             </p>
@@ -386,9 +417,15 @@ export default function Browse() {
         )}
       </main>
 
-      {/* Token hint bar */}
-      <footer style={{ textAlign: "center", marginTop: 60, fontSize: 12.5, color: "var(--text-faint)" }}>
-        <Wordmark size={15} gold={false} /> · stream via Real-Debrid + Torrentio · your token never leaves this browser
+      {/* Footer */}
+      <footer style={{ textAlign: "center", marginTop: 60, padding: "24px 16px 0", display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
+        <Wordmark size={17} />
+        <div className="footer-links" style={{ marginTop: 4 }}>
+          <Link href="/docs">Docs</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms</Link>
+          <Link href="/legal">Legal · DMCA</Link>
+        </div>
       </footer>
     </div>
   );
@@ -463,15 +500,7 @@ function ContinueBanner({
 
   return (
     <div
-      className="glass animate-in"
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: "var(--radius-xl)",
-        minHeight: 230,
-        display: "flex",
-        alignItems: "flex-end",
-      }}
+      className="glass animate-in billboard"
     >
       {backdrop ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -494,33 +523,33 @@ function ContinueBanner({
           inset: 0,
           zIndex: 1,
           background:
-            "linear-gradient(90deg, rgba(10,10,12,0.9) 0%, rgba(10,10,12,0.72) 45%, rgba(10,10,12,0.25) 100%)",
+            "linear-gradient(90deg, rgba(10,10,12,0.94) 0%, rgba(10,10,12,0.78) 40%, rgba(10,10,12,0.18) 78%, rgba(10,10,12,0.35) 100%)",
         }}
       />
       <div
         style={{
           position: "relative",
           zIndex: 2,
-          padding: "clamp(24px, 5vw, 48px)",
-          maxWidth: 700,
+          padding: "clamp(28px, 5vw, 64px)",
+          maxWidth: 760,
           width: "100%",
         }}
       >
-        <p className="eyebrow" style={{ marginBottom: 10, color: "var(--text-dim)" }}>
+        <p className="eyebrow" style={{ marginBottom: 12, color: "var(--text-dim)" }}>
           {ep ? `Episode ${ep}` : "Movie"} · {items} {items === 1 ? "title" : "titles"} in your list
         </p>
-        <h2 style={{ fontSize: "clamp(24px, 4vw, 38px)", lineHeight: 1.08 }}>{entry.title}</h2>
-        <p className="muted" style={{ marginTop: 10, fontSize: 13.5, lineHeight: 1.5 }}>
+        <h1 className="billboard-title">{entry.title}</h1>
+        <p className="muted" style={{ marginTop: 14, fontSize: 15, lineHeight: 1.5 }}>
           {timeOf(entry)} {entry.duration ? ` of ${prettyDuration(entry.duration)}` : ""}
           {remaining > 0 && entry.duration
             ? ` · ${prettyDuration(remaining)} left`
             : ""}
         </p>
-        <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
-          <button className="btn btn-primary" style={{ padding: "12px 24px", fontSize: 14 }} onClick={onResume}>
-            ▶ Resume
+        <div style={{ display: "flex", gap: 12, marginTop: 24, flexWrap: "wrap" }}>
+          <button className="btn btn-primary" style={{ padding: "14px 40px", fontSize: 17, fontWeight: 700 }} onClick={onResume}>
+            ▶ Play
           </button>
-          <button className="btn btn-ghost" style={{ padding: "12px 18px", fontSize: 14 }} onClick={onDismiss}>
+          <button className="btn" style={{ padding: "14px 26px", fontSize: 15, background: "rgba(255,255,255,0.14)" }} onClick={onDismiss}>
             ✕ Remove
           </button>
         </div>

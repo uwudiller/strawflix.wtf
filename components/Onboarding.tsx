@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 
 export default function Onboarding() {
@@ -36,7 +37,7 @@ export default function Onboarding() {
         <div style={{ display: "flex", alignItems: "center", gap: 14, justifyContent: "center", marginBottom: 40 }}>
           <div style={{ fontSize: 38 }}>
             <span style={{ fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1 }}>strawflix</span>
-            <span style={{ fontWeight: 800, letterSpacing: "-0.03em", color: "var(--gold)" }}>.uwu</span>
+            <span style={{ fontWeight: 800, letterSpacing: "-0.03em", color: "var(--accent)" }}>.wtf</span>
           </div>
         </div>
 
@@ -108,6 +109,13 @@ export default function Onboarding() {
           <br />
           Only stream content you have permission to watch.
         </p>
+
+        <div className="footer-links" style={{ marginTop: 24 }}>
+          <Link className="loud" href="/docs">Docs</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms</Link>
+          <Link href="/legal">Legal · DMCA</Link>
+        </div>
       </div>
     </div>
   );

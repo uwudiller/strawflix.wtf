@@ -3,7 +3,7 @@ import "./globals.css";
 import PwaRegister from "@/components/PwaRegister";
 
 export const metadata: Metadata = {
-  title: "strawflix.uwu",
+  title: "strawflix.wtf",
   description:
     "Stream movies and series with Real-Debrid + Torrentio. A glassy, cinematic way to watch.",
   icons: {
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0a0a0c",
+  themeColor: "#e50914",
 };
 
 export default function RootLayout({

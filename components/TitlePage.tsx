@@ -294,31 +294,16 @@ export default function TitlePage({
   return (
     <div style={{ paddingBottom: 80 }}>
       {/* Back bar */}
-      <header
-        className="glass"
-        style={{
-          position: "sticky",
-          top: 16,
-          zIndex: 20,
-          margin: "16px auto 0",
-          maxWidth: 1200,
-          width: "calc(100% - 48px)",
-          borderRadius: "var(--radius-lg)",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "12px 16px",
-        }}
-      >
-        <button className="btn" style={{ padding: "9px 16px", fontSize: 13 }} onClick={() => router.back()}>
+      <header className="nav-scrim">
+        <button className="btn" style={{ padding: "8px 18px", fontSize: 13 }} onClick={() => router.back()}>
           ← Back
         </button>
-        <span style={{ fontWeight: 600, fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.02em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {meta?.name ?? "…"}
         </span>
       </header>
 
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px 0" }}>
+      <main style={{ padding: "28px clamp(20px, 4vw, 64px) 0" }}>
         {/* Hero */}
         {metaError ? (
           <div className="glass" style={{ padding: 50, textAlign: "center" }}>
@@ -335,7 +320,7 @@ export default function TitlePage({
                 borderRadius: "var(--radius-xl)",
                 overflow: "hidden",
                 position: "relative",
-                minHeight: 320,
+                minHeight: "clamp(380px, 52vh, 540px)",
               }}
             >
               {meta.background ? (
@@ -352,15 +337,15 @@ export default function TitlePage({
                   inset: 0,
                   zIndex: 1,
                   background:
-                    "linear-gradient(190deg, rgba(10,10,12,0.25) 0%, rgba(10,10,12,0.72) 55%, rgba(10,10,12,0.95) 100%)",
+                    "linear-gradient(190deg, rgba(10,10,12,0.2) 0%, rgba(10,10,12,0.66) 55%, rgba(10,10,12,0.96) 100%)",
                 }}
               />
-              <div style={{ position: "relative", zIndex: 2, padding: "clamp(28px, 6vw, 64px)", maxWidth: 760 }}>
-                <p className="eyebrow" style={{ marginBottom: 12 }}>
+              <div style={{ position: "relative", zIndex: 2, padding: "clamp(32px, 6vw, 72px)", maxWidth: 820 }}>
+                <p className="eyebrow" style={{ marginBottom: 14 }}>
                   {type === "movie" ? "Movie" : "Series"}
                 </p>
-                <h1 style={{ fontSize: "clamp(34px, 6vw, 60px)" }}>{meta.name}</h1>
-                <div className="muted" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: 14, fontSize: 14 }}>
+                <h1 className="hero-title">{meta.name}</h1>
+                <div className="muted" style={{ display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", marginTop: 16, fontSize: 15 }}>
                   <span>{displayYear}</span>
                   {meta.imdbRating ? (
                     <span>
@@ -369,15 +354,15 @@ export default function TitlePage({
                   ) : null}
                   {meta.runtime ? <span>{meta.runtime}</span> : null}
                 </div>
-                <div className="muted" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+                <div className="muted" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
                   {(meta.genres ?? []).map((g) => (
                     <span key={g} className="chip">{g}</span>
                   ))}
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 20, alignItems: "center" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 24, alignItems: "center" }}>
                   <button
                     className={inList(imdbId) ? "btn btn-primary" : "btn"}
-                    style={{ padding: "10px 18px", fontSize: 13.5, gap: 8 }}
+                    style={{ padding: "12px 22px", fontSize: 14.5, gap: 8 }}
                     onClick={() =>
                       toggleList({
                         id: imdbId,
@@ -393,7 +378,7 @@ export default function TitlePage({
                   </button>
                 </div>
                 {meta.description ? (
-                  <p className="muted" style={{ marginTop: 16, lineHeight: 1.65, fontSize: 14.5, maxWidth: 640 }}>
+                  <p className="muted" style={{ marginTop: 18, lineHeight: 1.65, fontSize: 15.5, maxWidth: 680 }}>
                     {meta.description}
                   </p>
                 ) : null}
@@ -516,9 +501,11 @@ export default function TitlePage({
             <p className="eyebrow" style={{ marginBottom: 14 }}>
               More like this
             </p>
-            <div className="grid">
+            <div className="row-scroll">
               {similar.map((m, i) => (
-                <CatalogCard key={m.id} meta={m} index={i} fallbackType={type} />
+                <div key={m.id} style={{ width: 196, flexShrink: 0 }}>
+                  <CatalogCard meta={m} index={i} fallbackType={type} />
+                </div>
               ))}
             </div>
           </div>
@@ -615,7 +602,7 @@ function StreamRow({
                   fontWeight: 700,
                   color:
                     stream.container === "mkv"
-                      ? "rgba(245,197,24,0.85)"
+                      ? "rgba(229,9,20,0.85)"
                       : "rgba(255,255,255,0.75)",
                 }}
               >

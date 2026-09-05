@@ -1,14 +1,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
 :root {
-  --bg: #0a0a0c;
-  --bg-elev: #101014;
+  --bg: #141414;
+  --bg-elev: #181818;
   --text: #f5f5f7;
   --text-dim: rgba(245, 245, 247, 0.62);
   --text-faint: rgba(245, 245, 247, 0.4);
 
-  /* The one accent that stays: gold for the ".uwu" wordmark */
-  --gold: #f5c518;
+  /* The one accent that stays: red for the "wtf" wordmark */
+  --accent: #e50914;
 
   /* Monochrome liquid-glass surfaces */
   --glass-1: rgba(255, 255, 255, 0.05);
@@ -62,52 +62,50 @@ body {
   z-index: -2;
   overflow: hidden;
   background:
-    radial-gradient(1200px 800px at 80% -10%, rgba(255, 255, 255, 0.09), transparent 60%),
-    radial-gradient(900px 700px at 10% 10%, rgba(255, 255, 255, 0.05), transparent 55%),
-    radial-gradient(1000px 900px at 50% 120%, rgba(255, 255, 255, 0.06), transparent 60%),
+    radial-gradient(1400px 900px at 50% -20%, rgba(255, 255, 255, 0.05), transparent 55%),
     var(--bg);
 }
 
 .bg-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.5;
+  filter: blur(110px);
+  opacity: 0.18;
   will-change: transform;
-  animation: drift 26s ease-in-out infinite alternate;
+  animation: drift 30s ease-in-out infinite alternate;
 }
 
 .bg-stage .bg-orb:nth-child(1) {
   width: 520px;
   height: 520px;
-  top: -8%;
-  left: -6%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 65%);
+  top: -10%;
+  left: -8%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08), transparent 65%);
 }
 
 .bg-stage .bg-orb:nth-child(2) {
   width: 460px;
   height: 460px;
-  top: 32%;
-  right: -10%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.09), transparent 65%);
-  animation-delay: -8s;
+  top: 30%;
+  right: -12%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06), transparent 65%);
+  animation-delay: -10s;
 }
 
 .bg-stage .bg-orb:nth-child(3) {
   width: 620px;
   height: 620px;
-  bottom: -20%;
-  left: 28%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.07), transparent 65%);
-  animation-delay: -16s;
+  bottom: -22%;
+  left: 26%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05), transparent 65%);
+  animation-delay: -18s;
 }
 
 .bg-grain {
   position: absolute;
   inset: 0;
   opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 @keyframes drift {
@@ -131,7 +129,6 @@ body {
   box-shadow: var(--shadow-glass);
 }
 
-/* Lumpy, specular top edge — the "liquid" feel */
 .glass::before {
   content: "";
   position: absolute;
@@ -260,28 +257,28 @@ body {
 
 .card {
   position: relative;
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   background: var(--glass-1);
   -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(160%);
   backdrop-filter: blur(var(--blur-sm)) saturate(160%);
   border: 1px solid var(--glass-border-soft);
-  box-shadow: var(--shadow-glass);
+  box-shadow: none;
   cursor: pointer;
-  will-change: transform, box-shadow;
+  will-change: transform;
   transition: transform 0.3s var(--ease-fluid), box-shadow 0.3s var(--ease-fluid),
     border-color 0.3s var(--ease-fluid);
 }
 
 .card:hover {
-  transform: translateY(-4px) scale(1.015);
+  transform: translateY(0) scale(1.045);
+  z-index: 5;
   border-color: var(--glass-border);
-  box-shadow: 0 22px 60px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 14px 40px -10px rgba(0, 0, 0, 0.55);
 }
 
 .card:active {
-  transform: translateY(0) scale(0.97);
-  box-shadow: 0 6px 20px -8px rgba(0, 0, 0, 0.5);
+  transform: scale(0.97);
   transition-duration: 0.08s;
 }
 
@@ -317,11 +314,11 @@ body {
 }
 
 .card-body {
-  padding: 12px 14px 14px;
+  padding: 10px 12px 12px;
 }
 
 .card-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   line-height: 1.3;
   color: var(--text);
@@ -333,7 +330,7 @@ body {
 
 .card-sub {
   margin-top: 4px;
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--text-dim);
   display: flex;
   gap: 8px;
@@ -385,8 +382,8 @@ h2 {
 
 .grid {
   display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
 }
 
 .animate-in {
@@ -485,4 +482,156 @@ h2 {
   color: var(--text);
   border-color: rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- Netflix 1:1 layout (monochrome + gold liquid glass) ---------- */
+
+.nav-link {
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  padding: 6px 2px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  position: relative;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: var(--text);
+}
+
+.nav-link.active {
+  color: var(--text);
+}
+
+.nav-link-wrap {
+  position: relative;
+}
+
+.nav-slider {
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: transform 0.35s var(--ease-fluid), width 0.35s var(--ease-fluid);
+}
+
+.nav-scrim {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 32px);
+  padding: 0 clamp(20px, 4vw, 64px);
+  height: 68px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(10, 10, 12, 0.92) 0%, rgba(10, 10, 12, 0.78) 100%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid var(--glass-border-soft);
+}
+
+.row-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.row-scroll > * {
+  flex: 0 0 auto;
+}
+
+.billboard {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  min-height: clamp(340px, 52vw, 580px);
+  display: flex;
+  align-items: flex-end;
+}
+
+.billboard-title {
+  font-size: clamp(40px, 5.5vw, 80px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.hero-title {
+  font-size: clamp(40px, 6vw, 76px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+@media (max-width: 640px) {
+  .billboard {
+    min-height: 300px;
+  }
+  .nav-link {
+    font-size: 14px;
+  }
+}
+
+/* ---------- Static pages (docs / privacy / terms / legal) ---------- */
+
+.prose-block h2 {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  margin-top: 12px;
+}
+
+.prose-block p {
+  color: var(--text-dim);
+  line-height: 1.7;
+  max-width: 64ch;
+}
+
+.prose-block ul {
+  color: var(--text-dim);
+  line-height: 1.9;
+  padding-left: 20px;
+}
+
+.prose-block code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--glass-2);
+  border: 1px solid var(--glass-border-soft);
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 3vw, 28px);
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: var(--text);
+}
+
+.footer-links a.loud {
+  color: var(--accent);
 }

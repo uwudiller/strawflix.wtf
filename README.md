@@ -1,6 +1,6 @@
 # Strawflix
 
-![Strawflix.uwu](screenshot.png)
+![Strawflix.wtf](screenshot.png)
 
 > ⚠️ Only stream content you are legally entitled to watch. Your Real-Debrid token is stored only in your browser's `localStorage` and is sent to this app's own server routes to fetch stream metadata — it is never logged or exposed publicly.
 

@@ -57,7 +57,7 @@ export default function CatalogCard({
             fontSize: 16,
             lineHeight: 1,
             border: "1px solid rgba(255,255,255,0.18)",
-            background: saved ? "rgba(245,197,24,0.92)" : "rgba(10,10,12,0.55)",
+            background: saved ? "rgba(229,9,20,0.92)" : "rgba(10,10,12,0.55)",
             color: saved ? "#0a0a0c" : "rgba(255,255,255,0.85)",
             backdropFilter: "blur(8px)",
             cursor: "pointer",

@@ -14,11 +14,36 @@ async function cinemetaFetch<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-export async function getCatalog(type: "movie" | "series", id = "top"): Promise<CinemetaMeta[]> {
+export async function getCatalog(
+  type: "movie" | "series",
+  id = "top",
+  skip = 0
+): Promise<CinemetaMeta[]> {
   const data = await cinemetaFetch<{ metas: CinemetaMeta[] }>(
-    `/catalog/${type}/${id}.json`
+    `/catalog/${type}/${id}.json${skip > 0 ? `?skip=${skip}` : ""}`
   );
   return data.metas ?? [];
+}
+
+// Fetch enough pages of the "top" catalog to reach `count` unique titles.
+export async function getTopMetas(
+  type: "movie" | "series",
+  count = 50
+): Promise<CinemetaMeta[]> {
+  const seen = new Map<string, CinemetaMeta>();
+  let skip = 0;
+  let attempts = 0;
+  while (seen.size < count && attempts < 10) {
+    const batch = await getCatalog(type, "top", skip);
+    if (!batch.length) break;
+    for (const m of batch) {
+      if (m.id && !seen.has(m.id)) seen.set(m.id, m);
+    }
+    skip += batch.length;
+    attempts += 1;
+    if (batch.length < 24) break;
+  }
+  return [...seen.values()].slice(0, count);
 }
 
 export async function searchCinemeta(

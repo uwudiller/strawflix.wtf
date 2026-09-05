@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "strawflix.uwu",
+    name: "strawflix.wtf",
     short_name: "strawflix",
     description: "Stream from your Real-Debrid library",
     start_url: "/",
